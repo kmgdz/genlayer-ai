@@ -40,6 +40,23 @@ Wallet: 0x7B9d319D68Db6c2Fc1fDf88d89d2c1C3EC78cd99
 - [GenLayer Studio](https://studio.genlayer.com)
 - [GenLayer Docs](https://docs.genlayer.com)
 
+## How to Test
+
+1. Go to [GenLayer Studio](https://studio.genlayer.com)
+2. Create a new contract file
+3. Copy any contract from the `contracts/` folder
+4. Paste it into the Studio editor
+5. Make sure **Execution Mode** is set to `Normal (Full Consensus)`
+6. Click **▶ Run** to deploy
+7. Call the write methods with your own inputs
+8. Read results using the view methods
+
+## Requirements
+
+- MetaMask wallet
+- Free GEN tokens from [GenLayer Faucet](https://faucet.genlayer.com)
+- [GenLayer Studio](https://studio.genlayer.com) account
+
 ## License
 
 MIT
