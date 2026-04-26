@@ -54,7 +54,7 @@ Wallet: 0x7B9d319D68Db6c2Fc1fDf88d89d2c1C3EC78cd99
 ## Requirements
 
 - MetaMask wallet
-- Free GEN tokens
+- Free GEN tokens from [GenLayer Faucet](https://testnet-faucet.genlayer.foundation/)
 - [GenLayer Studio](https://studio.genlayer.com) account
 
 ## License
