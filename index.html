@@ -61,7 +61,7 @@
       font-size: 13px;
       margin-bottom: 16px;
     }
-    .card input, .card select {
+    .card input {
       width: 100%;
       padding: 10px;
       background: #050A14;
@@ -129,6 +129,24 @@
       margin-bottom: 20px;
       margin-left: 8px;
     }
+    .processing {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #aaa;
+      font-size: 12px;
+    }
+    .dot-flashing {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #1D9E75;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
   </style>
 </head>
 <body>
@@ -142,11 +160,11 @@
   <span class="badge">● Testnet Asimov Live</span>
   <span class="demo-badge">⚠️ Demo Mode</span>
   <h2>AI-Powered Smart Contracts</h2>
-  <p>5 Intelligent Contracts running LLM consensus 
+  <p>5 Intelligent Contracts running LLM consensus
   on GenLayer Testnet Asimov using Optimistic Democracy.</p>
   <p style="color:#BA7517;font-size:13px;margin-top:12px;">
     ⚠️ Simulated results — Real contracts deployed on Testnet Asimov.
-    <a href="https://github.com/kmgdz/genlayer-ai" 
+    <a href="https://github.com/kmgdz/genlayer-ai"
     style="color:#1D9E75;">View source code →</a>
   </p>
 </div>
@@ -157,9 +175,7 @@
     <h3>🧠 AI Sentiment Voter</h3>
     <p>Analyzes text sentiment using on-chain LLM consensus</p>
     <input id="s-input" placeholder="Enter text to analyze..." />
-    <button onclick="simulate('s-input', 's-result', 
-      ['positive','negative','neutral'], 
-      'Sentiment')">Analyze</button>
+    <button onclick="analyzeSentiment()">Analyze</button>
     <div class="result" id="s-result">Result will appear here</div>
     <div class="tx" id="s-tx"></div>
   </div>
@@ -168,9 +184,7 @@
     <h3>🌍 AI Language Detector</h3>
     <p>Detects language of any text via AI validators</p>
     <input id="l-input" placeholder="Enter text in any language..." />
-    <button onclick="simulate('l-input', 'l-result',
-      ['English','French','Arabic','Spanish','German'],
-      'Language')">Detect</button>
+    <button onclick="detectLanguage()">Detect</button>
     <div class="result" id="l-result">Result will appear here</div>
     <div class="tx" id="l-tx"></div>
   </div>
@@ -179,7 +193,7 @@
     <h3>😄 AI Joke Generator</h3>
     <p>Generates jokes by topic through decentralized AI</p>
     <input id="j-input" placeholder="Enter a topic..." />
-    <button onclick="simulateJoke()">Generate Joke</button>
+    <button onclick="generateJoke()">Generate Joke</button>
     <div class="result" id="j-result">Result will appear here</div>
     <div class="tx" id="j-tx"></div>
   </div>
@@ -187,11 +201,9 @@
   <div class="card">
     <h3>🗺️ AI Country Guesser</h3>
     <p>Guesses country from natural language hints</p>
-    <input id="c-input" 
+    <input id="c-input"
       placeholder="Give a hint about a country..." />
-    <button onclick="simulate('c-input', 'c-result',
-      ['France','Algeria','Japan','Brazil','Canada'],
-      'Country')">Guess</button>
+    <button onclick="guessCountry()">Guess</button>
     <div class="result" id="c-result">Result will appear here</div>
     <div class="tx" id="c-tx"></div>
   </div>
@@ -201,7 +213,7 @@
     <p>Translates text to any language on-chain</p>
     <input id="t-input" placeholder="Enter text to translate..." />
     <input id="t-lang" placeholder="Target language (e.g. French)" />
-    <button onclick="simulateTranslate()">Translate</button>
+    <button onclick="translateText()">Translate</button>
     <div class="result" id="t-result">Result will appear here</div>
     <div class="tx" id="t-tx"></div>
   </div>
@@ -209,7 +221,7 @@
 </div>
 
 <footer>
-  Built on <a href="https://genlayer.com">GenLayer</a> 
+  Built on <a href="https://genlayer.com">GenLayer</a>
   Testnet Asimov ·
   <a href="https://github.com/kmgdz/genlayer-ai">GitHub</a> ·
   <a href="https://studio.genlayer.com">Test Real Contracts</a>
@@ -222,55 +234,330 @@
 </footer>
 
 <script>
-  const jokes = {
-    blockchain: "Why did the blockchain go to therapy? Too many trust issues!",
-    ai: "Why did the AI get promoted? It had the best neural connections!",
-    crypto: "Why are crypto traders bad at poker? They always show their keys!",
-    default: "Why did the smart contract break up? It had too many conditions!"
-  };
-
-  const translations = {
-    french: "Bonjour! Ceci est une traduction IA sur GenLayer.",
-    arabic: "مرحبا! هذه ترجمة ذكاء اصطناعي على جين لاير.",
-    spanish: "¡Hola! Esta es una traducción de IA en GenLayer.",
-    default: "Hello! This is an AI translation on GenLayer."
-  };
-
   function fakeTx() {
-    return '0x' + Math.random().toString(16).substr(2,12) + '...';
+    return '0x' + Array.from({length: 64}, () =>
+      Math.floor(Math.random() * 16).toString(16)).join('');
   }
 
-  function simulate(inputId, resultId, options, label) {
-    const el = document.getElementById(resultId);
-    el.innerHTML = '⏳ Processing consensus...';
+  function setProcessing(resultId) {
+    document.getElementById(resultId).innerHTML =
+      '<div class="processing"><div class="dot-flashing"></div>' +
+      'Processing consensus...</div>';
+  }
+
+  // ─── SENTIMENT ───────────────────────────────────────────
+  function analyzeSentiment() {
+    const text = document.getElementById('s-input').value.trim();
+    if (!text) {
+      document.getElementById('s-result').innerHTML =
+        '⚠️ Please enter some text';
+      return;
+    }
+    setProcessing('s-result');
+
     setTimeout(() => {
-      const pick = options[Math.floor(Math.random()*options.length)];
-      el.innerHTML = label + ': <strong>' + pick + '</strong>';
-      const txId = resultId.split('-')[0] + '-tx';
-      const txEl = document.getElementById(txId);
-      if(txEl) txEl.innerHTML = 'TX: ' + fakeTx();
+      const t = text.toLowerCase();
+      let sentiment = 'neutral';
+
+      const positive = ['good','great','love','amazing','awesome',
+        'excellent','happy','best','wonderful','fantastic','nice',
+        'beautiful','perfect','brilliant','superb','enjoy','glad',
+        'excited','positive','hope','win','success','like','fun'];
+      const negative = ['bad','hate','terrible','awful','worst',
+        'horrible','sad','angry','ugly','fail','poor','wrong',
+        'disappointed','boring','useless','stupid','annoying',
+        'problem','error','broken','not good','not great'];
+
+      const posCount = positive.filter(w => t.includes(w)).length;
+      const negCount = negative.filter(w => t.includes(w)).length;
+
+      if (posCount > negCount) sentiment = 'positive 😊';
+      else if (negCount > posCount) sentiment = 'negative 😞';
+      else sentiment = 'neutral 😐';
+
+      document.getElementById('s-result').innerHTML =
+        'Sentiment: <strong>' + sentiment + '</strong>';
+      document.getElementById('s-tx').innerHTML =
+        'TX: ' + fakeTx();
     }, 2000);
   }
 
-  function simulateJoke() {
-    const topic = document.getElementById('j-input').value.toLowerCase();
-    const el = document.getElementById('j-result');
-    el.innerHTML = '⏳ Generating joke...';
+  // ─── LANGUAGE ────────────────────────────────────────────
+  function detectLanguage() {
+    const text = document.getElementById('l-input').value.trim();
+    if (!text) {
+      document.getElementById('l-result').innerHTML =
+        '⚠️ Please enter some text';
+      return;
+    }
+    setProcessing('l-result');
+
     setTimeout(() => {
-      const joke = jokes[topic] || jokes.default;
-      el.innerHTML = joke;
+      const t = text.toLowerCase();
+      let lang = 'English';
+
+      if (/[\u0600-\u06FF]/.test(text)) lang = 'Arabic 🇸🇦';
+      else if (/[\u4e00-\u9fff]/.test(text)) lang = 'Chinese 🇨🇳';
+      else if (/[\u3040-\u30ff]/.test(text)) lang = 'Japanese 🇯🇵';
+      else if (/[\uAC00-\uD7AF]/.test(text)) lang = 'Korean 🇰🇷';
+      else if (/[\u0400-\u04FF]/.test(text)) lang = 'Russian 🇷🇺';
+      else if (/\b(bonjour|salut|merci|oui|non|je|tu|il|elle|nous|vous|ils|comment|pourquoi|parce|avec|dans|sur|pour|qui|que|quoi|où|bonsoir|bonne)\b/.test(t))
+        lang = 'French 🇫🇷';
+      else if (/\b(hola|gracias|buenos|como|que|por|favor|si|no|es|son|tengo|tiene|estoy|donde|cuando|porque|pero|también|muy|bien|mal|buenas|señor)\b/.test(t))
+        lang = 'Spanish 🇪🇸';
+      else if (/\b(hallo|guten|danke|bitte|wie|ich|du|er|sie|wir|ist|sind|haben|nicht|auch|aber|mit|von|zu|auf|für|das|die|der|ein|eine)\b/.test(t))
+        lang = 'German 🇩🇪';
+      else if (/\b(ciao|buongiorno|grazie|prego|come|sono|sei|siamo|questo|quello|con|per|non|anche|molto|bene|male|buona|sera|notte)\b/.test(t))
+        lang = 'Italian 🇮🇹';
+      else if (/\b(olá|obrigado|bom|dia|como|você|está|sim|não|por|favor|muito|bem|mal|onde|quando|porque|mas|também|com|para|uma)\b/.test(t))
+        lang = 'Portuguese 🇵🇹';
+      else if (/\b(hi|hello|hey|how|the|is|are|you|what|good|morning|evening|night|please|thank|sorry|yes|no|where|when|why|but|also|with|for|this|that)\b/.test(t))
+        lang = 'English 🇬🇧';
+
+      document.getElementById('l-result').innerHTML =
+        'Language: <strong>' + lang + '</strong>';
+      document.getElementById('l-tx').innerHTML =
+        'TX: ' + fakeTx();
+    }, 2000);
+  }
+
+  // ─── JOKE ────────────────────────────────────────────────
+  function generateJoke() {
+    const topic = document.getElementById('j-input').value.trim();
+    if (!topic) {
+      document.getElementById('j-result').innerHTML =
+        '⚠️ Please enter a topic';
+      return;
+    }
+    setProcessing('j-result');
+
+    const jokes = {
+      blockchain: [
+        "Why did the blockchain go to therapy? Too many trust issues!",
+        "Blockchain walks into a bar. The bartender asks 'What'll it be?' Blockchain says 'I'll have what everyone else is having — and I'll verify it.'",
+        "Why is blockchain bad at keeping secrets? Because everything is on the ledger!"
+      ],
+      ai: [
+        "Why did the AI get promoted? It had the best neural connections!",
+        "I asked an AI to tell me a joke. It said: 'Error 404: Humor not found.' Then laughed at its own joke.",
+        "Why don't AIs ever get lost? They always follow the gradient!"
+      ],
+      crypto: [
+        "Why are crypto traders bad at poker? They always show their keys!",
+        "My crypto portfolio is like my diet — I keep saying I'll fix it tomorrow.",
+        "Why did Bitcoin break up with Ethereum? Too many gas fees in the relationship!"
+      ],
+      genlayer: [
+        "Why is GenLayer so smart? Because its contracts actually think before they execute!",
+        "GenLayer walks into a bar. The bartender asks 'How did you know this was a good bar?' GenLayer says 'My validators reached consensus!'",
+        "Why did the developer love GenLayer? Because finally, smart contracts are actually smart!"
+      ],
+      developer: [
+        "Why do developers prefer dark mode? Because light attracts bugs!",
+        "A developer's life: 99 bugs in the code, fix one, 127 bugs in the code.",
+        "Why did the developer go broke? Because he used up all his cache!"
+      ],
+      default: [
+        "Why did the smart contract break up? It had too many conditions!",
+        "A validator walks into a bar and says 'I'll have what the leader is having.' Classic Optimistic Democracy!",
+        "Why is decentralization like pizza? Everyone wants a slice!"
+      ]
+    };
+
+    setTimeout(() => {
+      const t = topic.toLowerCase();
+      let category = 'default';
+
+      if (t.includes('blockchain') || t.includes('block'))
+        category = 'blockchain';
+      else if (t.includes('ai') || t.includes('artificial') ||
+               t.includes('intelligence') || t.includes('machine'))
+        category = 'ai';
+      else if (t.includes('crypto') || t.includes('bitcoin') ||
+               t.includes('ethereum') || t.includes('token'))
+        category = 'crypto';
+      else if (t.includes('genlayer') || t.includes('gen'))
+        category = 'genlayer';
+      else if (t.includes('dev') || t.includes('code') ||
+               t.includes('program') || t.includes('software'))
+        category = 'developer';
+
+      const list = jokes[category];
+      const joke = list[Math.floor(Math.random() * list.length)];
+
+      document.getElementById('j-result').innerHTML = joke;
       document.getElementById('j-tx').innerHTML = 'TX: ' + fakeTx();
     }, 2000);
   }
 
-  function simulateTranslate() {
-    const lang = document.getElementById('t-lang').value.toLowerCase();
-    const el = document.getElementById('t-result');
-    el.innerHTML = '⏳ Translating...';
+  // ─── COUNTRY ─────────────────────────────────────────────
+  function guessCountry() {
+    const hint = document.getElementById('c-input').value.trim();
+    if (!hint) {
+      document.getElementById('c-result').innerHTML =
+        '⚠️ Please enter a hint';
+      return;
+    }
+    setProcessing('c-result');
+
+    const countries = [
+      { name: 'France 🇫🇷', keys: ['eiffel','paris','french','baguette','wine','louvre','versailles','french revolution','napoleon','croissant'] },
+      { name: 'Algeria 🇩🇿', keys: ['algiers','sahara','algeria','algerian','mediterranean','north africa','berber','kabylie'] },
+      { name: 'USA 🇺🇸', keys: ['statue of liberty','white house','hollywood','new york','washington','american','united states','nasa','grand canyon','silicon valley'] },
+      { name: 'Japan 🇯🇵', keys: ['tokyo','mount fuji','samurai','sushi','anime','japan','japanese','cherry blossom','ninja','kyoto','osaka'] },
+      { name: 'Brazil 🇧🇷', keys: ['amazon','carnival','brazil','brazilian','rio','sao paulo','football','soccer','christ the redeemer','rainforest'] },
+      { name: 'Germany 🇩🇪', keys: ['berlin','munich','german','germany','bmw','mercedes','oktoberfest','bratwurst','bundesliga','volkswagen'] },
+      { name: 'Italy 🇮🇹', keys: ['rome','pizza','pasta','italy','italian','colosseum','venice','milan','ferrari','vatican','florence'] },
+      { name: 'Spain 🇪🇸', keys: ['madrid','barcelona','spain','spanish','flamenco','bullfight','paella','real madrid','la liga','siesta'] },
+      { name: 'China 🇨🇳', keys: ['great wall','beijing','shanghai','china','chinese','dragon','pandas','silk road','confucius','yangtze'] },
+      { name: 'UK 🇬🇧', keys: ['london','big ben','england','british','queen','buckingham','shakespeare','oxford','cambridge','premier league','harry potter'] },
+      { name: 'Canada 🇨🇦', keys: ['toronto','maple','hockey','canada','canadian','niagara','rocky mountains','moose','trudeau','montreal'] },
+      { name: 'Australia 🇦🇺', keys: ['sydney','kangaroo','koala','australia','australian','outback','great barrier reef','opera house','boomerang'] },
+      { name: 'Russia 🇷🇺', keys: ['moscow','kremlin','russia','russian','vodka','siberia','putin','red square','baikal','bolshoi'] },
+      { name: 'Egypt 🇪🇬', keys: ['pyramid','sphinx','cairo','egypt','egyptian','nile','pharaoh','cleopatra','mummy','luxor'] },
+      { name: 'Saudi Arabia 🇸🇦', keys: ['mecca','riyadh','saudi','arabia','arabian','oil','desert','mosque','hajj','medina'] },
+    ];
+
     setTimeout(() => {
-      const translation = translations[lang] || translations.default;
-      el.innerHTML = translation;
-      document.getElementById('t-tx').innerHTML = 'TX: ' + fakeTx();
+      const h = hint.toLowerCase();
+      let found = null;
+
+      for (const c of countries) {
+        if (c.keys.some(k => h.includes(k))) {
+          found = c.name;
+          break;
+        }
+      }
+
+      if (!found) found = 'Unknown Country 🌍 — Try a more specific hint!';
+
+      document.getElementById('c-result').innerHTML =
+        'Country: <strong>' + found + '</strong>';
+      document.getElementById('c-tx').innerHTML =
+        'TX: ' + fakeTx();
+    }, 2000);
+  }
+
+  // ─── TRANSLATOR ───────────────────────────────────────────
+  function translateText() {
+    const text = document.getElementById('t-input').value.trim();
+    const lang = document.getElementById('t-lang').value.trim();
+
+    if (!text || !lang) {
+      document.getElementById('t-result').innerHTML =
+        '⚠️ Please enter text and target language';
+      return;
+    }
+    setProcessing('t-result');
+
+    const translations = {
+      french: {
+        'hello': 'Bonjour',
+        'hi': 'Salut',
+        'good morning': 'Bonjour',
+        'good night': 'Bonne nuit',
+        'thank you': 'Merci',
+        'yes': 'Oui',
+        'no': 'Non',
+        'how are you': 'Comment allez-vous?',
+        'i love you': 'Je t\'aime',
+        'goodbye': 'Au revoir',
+        'welcome': 'Bienvenue',
+        'please': 'S\'il vous plaît',
+        'sorry': 'Désolé',
+        'what is your name': 'Comment vous appelez-vous?',
+      },
+      arabic: {
+        'hello': 'مرحبا',
+        'hi': 'أهلاً',
+        'good morning': 'صباح الخير',
+        'good night': 'تصبح على خير',
+        'thank you': 'شكراً',
+        'yes': 'نعم',
+        'no': 'لا',
+        'how are you': 'كيف حالك؟',
+        'i love you': 'أحبك',
+        'goodbye': 'وداعاً',
+        'welcome': 'أهلاً وسهلاً',
+        'please': 'من فضلك',
+        'sorry': 'آسف',
+        'what is your name': 'ما اسمك؟',
+      },
+      spanish: {
+        'hello': 'Hola',
+        'hi': 'Hola',
+        'good morning': 'Buenos días',
+        'good night': 'Buenas noches',
+        'thank you': 'Gracias',
+        'yes': 'Sí',
+        'no': 'No',
+        'how are you': '¿Cómo estás?',
+        'i love you': 'Te quiero',
+        'goodbye': 'Adiós',
+        'welcome': 'Bienvenido',
+        'please': 'Por favor',
+        'sorry': 'Lo siento',
+        'what is your name': '¿Cómo te llamas?',
+      },
+      german: {
+        'hello': 'Hallo',
+        'hi': 'Hi',
+        'good morning': 'Guten Morgen',
+        'good night': 'Gute Nacht',
+        'thank you': 'Danke',
+        'yes': 'Ja',
+        'no': 'Nein',
+        'how are you': 'Wie geht es Ihnen?',
+        'i love you': 'Ich liebe dich',
+        'goodbye': 'Auf Wiedersehen',
+        'welcome': 'Willkommen',
+        'please': 'Bitte',
+        'sorry': 'Entschuldigung',
+        'what is your name': 'Wie heißen Sie?',
+      },
+      italian: {
+        'hello': 'Ciao',
+        'hi': 'Ciao',
+        'good morning': 'Buongiorno',
+        'good night': 'Buona notte',
+        'thank you': 'Grazie',
+        'yes': 'Sì',
+        'no': 'No',
+        'how are you': 'Come stai?',
+        'i love you': 'Ti amo',
+        'goodbye': 'Arrivederci',
+        'welcome': 'Benvenuto',
+        'please': 'Per favore',
+        'sorry': 'Mi dispiace',
+        'what is your name': 'Come ti chiami?',
+      }
+    };
+
+    setTimeout(() => {
+      const l = lang.toLowerCase();
+      const t = text.toLowerCase().trim();
+      let result = null;
+
+      for (const [langKey, dict] of Object.entries(translations)) {
+        if (l.includes(langKey)) {
+          result = dict[t] || null;
+          break;
+        }
+      }
+
+      if (result) {
+        document.getElementById('t-result').innerHTML =
+          '<strong>' + result + '</strong>';
+      } else {
+        document.getElementById('t-result').innerHTML =
+          '⚠️ Translation not available in demo. ' +
+          'Try: hello, hi, thank you, yes, no, goodbye, ' +
+          'i love you, how are you — in French, Arabic, ' +
+          'Spanish, German or Italian.';
+      }
+
+      document.getElementById('t-tx').innerHTML =
+        'TX: ' + fakeTx();
     }, 2000);
   }
 </script>
