@@ -118,6 +118,17 @@
       font-size: 11px;
       margin-bottom: 20px;
     }
+    .demo-badge {
+      display: inline-block;
+      background: #2A1A0A;
+      color: #BA7517;
+      border: 1px solid #BA7517;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      margin-bottom: 20px;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -129,9 +140,15 @@
 
 <div class="hero">
   <span class="badge">● Testnet Asimov Live</span>
+  <span class="demo-badge">⚠️ Demo Mode</span>
   <h2>AI-Powered Smart Contracts</h2>
   <p>5 Intelligent Contracts running LLM consensus 
   on GenLayer Testnet Asimov using Optimistic Democracy.</p>
+  <p style="color:#BA7517;font-size:13px;margin-top:12px;">
+    ⚠️ Simulated results — Real contracts deployed on Testnet Asimov.
+    <a href="https://github.com/kmgdz/genlayer-ai" 
+    style="color:#1D9E75;">View source code →</a>
+  </p>
 </div>
 
 <div class="cards">
@@ -192,9 +209,16 @@
 </div>
 
 <footer>
-  Built on <a href="https://genlayer.com">GenLayer</a> Testnet Asimov ·
+  Built on <a href="https://genlayer.com">GenLayer</a> 
+  Testnet Asimov ·
   <a href="https://github.com/kmgdz/genlayer-ai">GitHub</a> ·
-  Wallet: 0x7B9d...cd99
+  <a href="https://studio.genlayer.com">Test Real Contracts</a>
+  <br><br>
+  ⚠️ This is a demo interface. Results are simulated.
+  To interact with real contracts deploy them on
+  <a href="https://studio.genlayer.com">GenLayer Studio</a>
+  using the source code from our
+  <a href="https://github.com/kmgdz/genlayer-ai">GitHub repo</a>.
 </footer>
 
 <script>
